@@ -10,7 +10,7 @@ var reg = {
     productName: /^[A-Z][a-z0-9]{2,8}$/,
     productPrice: /^[1-9][0-9]|100$/,
     productDesc: /.{10}/, 
-    productCategory: /(Mobile Phones|Screens|Laptops)/i,
+    productCategory: /(Mobile|Screens|Laptops)/i,
 }
 //عشان لما اجي اسرش وامسح ممسحش من الlist بتاعة السيرش
 // var currentId = 0;
@@ -28,23 +28,23 @@ if (localStorage.getItem("productlist") != null) {
 
 //2
 function addproduct() {
-    console.log();
-    
-    var product = {
-        name: productName.value,
-        price: productPrice.value,
-        category: productCategory.value,
-        desc: productdesc.value,
-        image: `images/${productimage.files[0]?.name}`,
-        Id: productlist.length,
-    }
-    productlist.push(product);
-    updateLocalStorage();
-    //localStorage.setItem("productlist",JSON.stringify(productlist)); clean-code
-    DisplayProduct(productlist);
-    updateInputValue();
+    var reader = new FileReader(); 
+    reader.onload = function (e) {
+        var product = {
+            name: productName.value,
+            price: productPrice.value,
+            category: productCategory.value,
+            desc: productdesc.value,
+            image: e.target.result,
+            Id: productlist.length,
+        };
+        productlist.push(product);
+        updateLocalStorage();
+        DisplayProduct(productlist);
+        updateInputValue();
+    };
+    reader.readAsDataURL(productimage.files[0]);
 }
-
 //4
 /* cleeeean-code
 function clear(){
@@ -59,10 +59,9 @@ function clear(){
 function DisplayProduct(list) {
     var cartona = ``;
     for (var i = 0; i < list.length; i++) {
-        //بسبب الbach tick اقدر استخدم ال$
         cartona += `<div class="col-md-4">
                 <div class="item text-white border border-white overflow-hidden">
-                    <img width = "100%" height="250px" src="${list[i].image}" alt="">
+                    <img width="100%" height="250px" src="${list[i].image}" alt="">
                     <div class="p-3">
                         <h2 class="h4">name : ${list[i].newName ? list[i].newName : list[i].name}</h2>
                         <p>desc : ${list[i].desc}</p>
@@ -72,10 +71,9 @@ function DisplayProduct(list) {
                         <button onclick="Delete(${i})" class=" btn btn-outline-danger w-100 mb-3">Delete</button>
                     </div>
                 </div>
-            </div>`
+            </div>`;
     }
     document.getElementById("myData").innerHTML = cartona;
-    console.log(i);
 }
 
 //5
@@ -102,7 +100,13 @@ function updateInputValue(config) {
     productCategory.value = config ? config.category : null;
     productPrice.value = config ? config.price : null;
     productdesc.value = config ? config.desc : null;
-    // productimage.value = config ? config.desc : null;
+    if (config && config.image) {
+        var img = document.createElement('img');
+        img.src = config.image;
+        img.width = 100;
+        img.height = 100;
+        productimage.parentNode.appendChild(img);
+    }
 }
 
 
@@ -124,17 +128,33 @@ function getDataToUpdade(index) {
 
 //8
 function UpdateProduct() {
-    productlist[currentIndex].name = productName.value;
-    productlist[currentIndex].price = productPrice.value;
-    productlist[currentIndex].desc = productdesc.value;
-    productlist[currentIndex].category = productCategory.value;
-    DisplayProduct(productlist);
-    localStorage.setItem("productlist", productlist);
-    updateLocalStorage();
-    updateInputValue()
-    updatebtn.classList.add("d-none");
-    addbtn.classList.remove("d-none");
-    
+    var reader = new FileReader();
+    reader.onload = function (e) {
+        productlist[currentIndex].name = productName.value;
+        productlist[currentIndex].price = productPrice.value;
+        productlist[currentIndex].desc = productdesc.value;
+        productlist[currentIndex].category = productCategory.value;
+        productlist[currentIndex].image = e.target.result;
+        DisplayProduct(productlist);
+        updateLocalStorage();
+        updateInputValue();
+        updatebtn.classList.add("d-none");
+        addbtn.classList.remove("d-none");
+    };
+    if (productimage.files[0]) {
+        reader.readAsDataURL(productimage.files[0]); 
+    } else {
+        // لو مفيش صورة جديدة، نحدث البيانات من غير ما نغير الصورة
+        productlist[currentIndex].name = productName.value;
+        productlist[currentIndex].price = productPrice.value;
+        productlist[currentIndex].desc = productdesc.value;
+        productlist[currentIndex].category = productCategory.value;
+        DisplayProduct(productlist);
+        updateLocalStorage();
+        updateInputValue();
+        updatebtn.classList.add("d-none");
+        addbtn.classList.remove("d-none");
+    }
 }
 
 //clean code
